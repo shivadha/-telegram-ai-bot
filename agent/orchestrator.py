@@ -23,7 +23,21 @@ async def handle_user_message(user_id, message, telegram_reply):
         return
 
     # Step 2: Awaiting theme description
-    if session["state"] == "awaiting_theme":
+  from tools.script_generator import generate_script
+
+if session["state"] == "awaiting_theme":
+    session["data"]["theme_description"] = message
+
+    await telegram_reply("🤖 Generating script...")
+
+    script = generate_script(message)
+
+    session["data"]["script"] = script
+    update_state(user_id, "awaiting_images")
+
+    await telegram_reply(f"✨ Here is your script:\n\n{script}\n\n📸 Now send 2-4 images of Shivit.")
+    return
+
         session["data"]["theme_description"] = message
         update_state(user_id, "awaiting_images")
 
