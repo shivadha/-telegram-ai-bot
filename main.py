@@ -1,26 +1,21 @@
-import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-from services.instagram_service import download_instagram_reel
-
-TOKEN = os.environ.get("BOT_TOKEN")
+from services.instagram_service import fetch_instagram_metadata
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message.text
 
     if "instagram.com" in message:
-        await update.message.reply_text("📥 Downloading Instagram reel...")
+        await update.message.reply_text("🔍 Fetching reel metadata...")
 
-        success, response = download_instagram_reel(message)
+        success, data = fetch_instagram_metadata(message)
 
         if success:
-            await update.message.reply_text("✅ Reel downloaded successfully!")
+            title = data.get("title", "No title")
+            author = data.get("author_name", "Unknown")
+
+            await update.message.reply_text(
+                f"📌 Title: {title}\n👤 Author: {author}\n\nNow send 2-4 images of Shivit."
+            )
         else:
-            await update.message.reply_text(f"❌ Error: {response}")
+            await update.message.reply_text(f"❌ Error: {data}")
     else:
         await update.message.reply_text("Send me an Instagram Reel link 🚀")
-
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-app.run_polling()
