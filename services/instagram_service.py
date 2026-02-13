@@ -1,31 +1,21 @@
-import os
-import instaloader
+import requests
 
-DOWNLOAD_PATH = "downloads"
-
-USERNAME = os.environ.get("IG_USERNAME")
-PASSWORD = os.environ.get("IG_PASSWORD")
-
-def download_instagram_reel(url: str):
+def fetch_instagram_metadata(url: str):
     try:
-        if not os.path.exists(DOWNLOAD_PATH):
-            os.makedirs(DOWNLOAD_PATH)
+        oembed_url = "https://graph.facebook.com/v17.0/instagram_oembed"
 
-        loader = instaloader.Instaloader(
-            download_videos=True,
-            save_metadata=False
-        )
+        params = {
+            "url": url,
+            "access_token": None  # we will add later if needed
+        }
 
-        # Login to Instagram
-        if USERNAME and PASSWORD:
-            loader.login(USERNAME, PASSWORD)
+        response = requests.get(oembed_url, params={"url": url})
 
-        shortcode = url.strip("/").split("/")[-1]
-        post = instaloader.Post.from_shortcode(loader.context, shortcode)
-
-        loader.download_post(post, target=DOWNLOAD_PATH)
-
-        return True, "Download successful"
+        if response.status_code == 200:
+            data = response.json()
+            return True, data
+        else:
+            return False, f"Failed with status {response.status_code}"
 
     except Exception as e:
         return False, str(e)
